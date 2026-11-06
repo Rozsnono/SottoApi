@@ -10,3 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Sotto projektinformációk
 A projekt céljáról, felépítéséről, konfigurációjáról, korlátairól és szabályairól a gyökér `../AGENTS.md` és a `README.md` szól (külső, nem KEDD projekt). A fenti Next.js blokkot a `next dev` kezeli.
+
+
+## Indítási napló
+`src/instrumentation.ts` induláskor kiírja: `[sotto-api] v<verzió> | port <port> | <mód>` (a verzió a package.json-ból, a port a `PORT` környezeti változóból, amit a Next állít).
