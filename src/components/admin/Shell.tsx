@@ -1,4 +1,5 @@
 "use client";
+import { Logo } from "./Logo";
 import { LayoutDashboard, Users, Flag, ScrollText, ShieldCheck, HardDrive, MoreHorizontal, LogOut, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -55,7 +56,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-onaccent">Skip</a>
       {/* Asztali ikonsín */}
       <nav aria-label="Admin" className="fixed inset-y-0 left-0 z-30 hidden w-[76px] flex-col items-center gap-2 border-r border-line bg-surface py-4 lg:flex">
-        <div className="mb-3 font-display text-xl font-bold text-accent" aria-hidden="true">s</div>
+        <Logo size={40} className="mb-3" />
         {ITEMS.map((i) => (
           <Link key={i.href} href={i.href} aria-label={t(`nav.${i.key}`)} title={t(`nav.${i.key}`)} aria-current={active(i) ? "page" : undefined} className={cx("relative grid size-12 place-items-center rounded-xl", active(i) ? "bg-soft text-accent" : "text-muted hover:bg-alt")}>
             <i.Icon size={22} strokeWidth={active(i) ? 2.25 : 1.75} />

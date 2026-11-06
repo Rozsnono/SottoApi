@@ -1,0 +1,10 @@
+/** Sotto márkajel (docs/design/logo.svg): két egymásba csúszó beszédbuborék indigó négyzeten. */
+export function Logo({ size = 40, className }: { size?: number; className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={size} height={size} role="img" aria-label="Sotto" className={className}>
+      <rect width="512" height="512" rx="112" fill="#4A4FD8" />
+      <path d="M169 118h153a52 52 0 0 1 52 52v66a52 52 0 0 1-52 52H236l-58 44a8 8 0 0 1-13-6v-38h0a52 52 0 0 1-48-52v-66a52 52 0 0 1 52-52z" fill="#FFFFFF" opacity="0.96" />
+      <path d="M286 292h96a40 40 0 0 1 40 40v30a40 40 0 0 1-30 39v31a6 6 0 0 1-10 5l-42-34h-54a40 40 0 0 1-40-40v-31a40 40 0 0 1 40-40z" fill="#16181D" opacity="0.92" transform="translate(-20 -20)" />
+    </svg>
+  );
+}

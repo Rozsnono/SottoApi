@@ -1,5 +1,6 @@
 "use client";
-import { KeyRound, LogIn, ShieldCheck } from "lucide-react";
+import { KeyRound, LogIn } from "lucide-react";
+import { Logo } from "@/components/admin/Logo";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -38,7 +39,7 @@ export default function LoginPage() {
     <main className="grid min-h-dvh place-items-center px-4">
       <motion.form onSubmit={submit} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }} className="w-full max-w-sm rounded-3xl border border-line bg-surface p-6" aria-labelledby="t">
         <div className="mb-5 flex items-center gap-3">
-          <div className="grid size-12 place-items-center rounded-2xl bg-accent text-onaccent"><ShieldCheck size={26} /></div>
+          <Logo size={48} />
           <div>
             <p className="font-display text-xl font-bold leading-none">sotto</p>
             <h1 id="t" className="text-sm text-muted">{t("login.title")}</h1>
