@@ -138,3 +138,13 @@ describe("admin: felhasználó végleges törlése", () => {
     expect((await User.findById(b.userId))!.status).toBe("deleted_pending");
   });
 });
+
+import { GET as versionRoute } from "@/app/api/version/route";
+import pkg from "../package.json";
+describe("verzió végpont", () => {
+  it("nyilvános, a package.json verzióját adja", async () => {
+    const r = await json(await versionRoute(jsonReq("/api/version", "GET"), anyCtx()));
+    expect(r.status).toBe(200);
+    expect(r.body.data.version).toBe(pkg.version);
+  });
+});
