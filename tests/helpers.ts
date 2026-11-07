@@ -113,7 +113,7 @@ export async function befriend(a: TestUser, b: TestUser): Promise<string> {
 }
 
 /** Valódi (aláírt, borítékolt) üzenettörzs építése a beszélgetés aktuális eszközlistájára. */
-export async function buildMessage(sender: TestUser, conversationId: string, opts: { type?: "text" | "image" | "video" | "event"; mediaRef?: string | null; text?: string; clientMessageId?: string } = {}) {
+export async function buildMessage(sender: TestUser, conversationId: string, opts: { type?: "text" | "image" | "video" | "audio" | "event"; mediaRef?: string | null; text?: string; clientMessageId?: string } = {}) {
   const dev = await json(await devicesRoute(jsonReq(`/api/conversations/${conversationId}/devices`, "GET", undefined, authH(sender)), anyCtx({ id: conversationId })));
   const contentKey = randomBytes(32);
   const nonce = randomBytes(24);

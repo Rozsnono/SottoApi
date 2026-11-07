@@ -17,3 +17,6 @@ A projekt céljáról, felépítéséről, konfigurációjáról, korlátairól 
 
 ## Aktivitás (0.4.0)
 `GET /api/presence`: elfogadott ismerősök `lastSeenAt` értéke; kölcsönös (`User.showActivity`, alapból true, `PUT /api/account/settings`). A `lastSeenAt`-ot a `/api/messages/sync` frissíti (20 mp).
+
+## 0.5.0
+`type: "audio"` (hangüzenet, médiával), `Device.notificationDetail` (`name`|`hidden`: a push címe „Sotto”, ha rejtett).

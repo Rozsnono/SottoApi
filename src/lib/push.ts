@@ -25,11 +25,11 @@ export async function notifyNewMessage(a: NotifyArgs): Promise<{ sent: number }>
     if (!recipient || recipient.status !== "active") return { sent: 0 };
     const pref = await ConversationPref.findOne({ userId: a.recipientId, conversationId: a.conversationId }, { mutedUntil: 1 }).lean();
     if (pref?.mutedUntil && pref.mutedUntil.getTime() > Date.now()) return { sent: 0 };
-    const devices = await Device.find({ userId: a.recipientId, revokedAt: { $exists: false }, pushToken: { $exists: true, $ne: null }, notificationsEnabled: { $ne: false } }, { pushToken: 1 }).lean();
+    const devices = await Device.find({ userId: a.recipientId, revokedAt: { $exists: false }, pushToken: { $exists: true, $ne: null }, notificationsEnabled: { $ne: false } }, { pushToken: 1, notificationDetail: 1 }).lean();
     if (!devices.length) return { sent: 0 };
     const messages = devices.map((d) => ({
       to: d.pushToken,
-      title: a.senderUsername,
+      title: d.notificationDetail === "hidden" ? "Sotto" : a.senderUsername,
       body: "New message",
       sound: "default",
       channelId: "messages",

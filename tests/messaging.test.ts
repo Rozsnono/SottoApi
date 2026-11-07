@@ -175,6 +175,13 @@ describe("média", () => {
   };
   const ref = "a".repeat(32);
 
+  it("hangüzenet (audio): médiával elfogadva, média nélkül elutasítva", async () => {
+    const { a, conv } = await pair();
+    mk({ exists: true, sizeBytes: 500_000 });
+    expect((await send(a, await buildMessage(a, conv, { type: "audio" as never, mediaRef: ref }))).status).toBe(201);
+    expect((await send(a, await buildMessage(a, conv, { type: "audio" as never }))).status).toBe(400);
+  });
+
   it("képüzenet: létező média elfogadva, törléskor a médiafájl is törlődik", async () => {
     const { a, conv } = await pair();
     const deleted = mk({ exists: true, sizeBytes: 1_000_000 });
@@ -263,6 +270,15 @@ describe("push értesítés", () => {
     await new Promise((r) => setTimeout(r, 100));
     expect(calls.length).toBe(0);
     expect((await sync(b)).body.data.messages.some((m: { type: string }) => m.type === "event")).toBe(true);
+  });
+
+  it("notificationDetail=hidden: a push címe „Sotto”, a feladó neve nem megy ki", async () => {
+    const { b, conv } = await pair();
+    await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: token, notificationDetail: "hidden" }, authH(b)), anyCtx());
+    const calls = mockExpo();
+    await notifyNewMessage({ recipientId: b.userId, senderUsername: "anna", conversationId: conv });
+    const sent = (calls[0].body as { title: string }[])[0];
+    expect(sent.title).toBe("Sotto");
   });
 
   it("csak a feladó neve és általános szöveg megy ki, tartalom/ciphertext soha", async () => {

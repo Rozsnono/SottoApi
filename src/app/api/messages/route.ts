@@ -72,6 +72,7 @@ export const POST = handle(async (req) => {
       throw new ApiError("SERVICE_UNAVAILABLE", "A médiatár átmenetileg nem elérhető.");
     }
     if (!info.exists) throw new ApiError("VALIDATION_ERROR", "A média nem található.");
+    // kép és hang (max. néhány perc tömörített hang) a kisebb korlátot kapja, videó a nagyobbat
     const max = body.type === "video" ? MAX_VIDEO_CIPHERTEXT_BYTES : MAX_IMAGE_CIPHERTEXT_BYTES;
     if (info.sizeBytes !== undefined && info.sizeBytes > max) {
       await adapter.delete(body.mediaRef).catch((e) => logger.warn("Túlméretes média törlése sikertelen", { err: String(e) }));

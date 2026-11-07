@@ -17,7 +17,7 @@ const MessageSchema = new Schema(
     senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     /** Monoton sorszám a szinkron-kurzorhoz (nem a createdAt). */
     seq: { type: Number, required: true, index: true },
-    type: { type: String, enum: ["text", "image", "video", "event"], required: true },
+    type: { type: String, enum: ["text", "image", "video", "audio", "event"], required: true },
     ciphertext: { type: String },
     nonce: { type: String },
     signature: { type: String },

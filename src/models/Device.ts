@@ -9,6 +9,7 @@ const DeviceSchema = new Schema(
     devicePublicKey: { type: String, required: true },
     pushToken: { type: String },
     notificationsEnabled: { type: Boolean, default: true },
+    notificationDetail: { type: String, enum: ["name", "hidden"], default: "name" },
     lastSeenAt: { type: Date },
     revokedAt: { type: Date },
     /** Utolsó médiakulcs-verzió, amit az eszköz megkapott (admin kiosztás-statisztikához). */

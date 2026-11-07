@@ -12,7 +12,7 @@ export const PUT = handle(async (req) => {
   if (body.pushToken) await Device.updateMany({ pushToken: body.pushToken, deviceId: { $ne: deviceId } }, { $unset: { pushToken: 1 } });
   await Device.updateOne(
     { userId: user._id, deviceId },
-    { ...(body.pushToken ? { pushToken: body.pushToken } : { $unset: { pushToken: 1 } }), ...(body.notificationsEnabled !== undefined ? { notificationsEnabled: body.notificationsEnabled } : {}) },
+    { ...(body.pushToken ? { pushToken: body.pushToken } : { $unset: { pushToken: 1 } }), ...(body.notificationsEnabled !== undefined ? { notificationsEnabled: body.notificationsEnabled } : {}), ...(body.notificationDetail !== undefined ? { notificationDetail: body.notificationDetail } : {}) },
   );
   return ok({ registered: !!body.pushToken });
 });
