@@ -320,3 +320,17 @@ describe("push értesítés", () => {
   });
 });
 void ed25519;
+
+describe("push beállítás részleges módosítása", () => {
+  it("token nélküli kérés (csak notificationDetail) nem törli a tokent; null törli", async () => {
+    const { b } = await pair();
+    const token = "ExponentPushToken[keep_1]";
+    await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: token }, authH(b)), anyCtx());
+    await pushRoute(jsonReq("/api/devices/push", "PUT", { notificationDetail: "hidden" }, authH(b)), anyCtx());
+    let d = await Device.findOne({ userId: b.userId }).lean();
+    expect([d?.pushToken, d?.notificationDetail]).toEqual([token, "hidden"]);
+    await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: null }, authH(b)), anyCtx());
+    d = await Device.findOne({ userId: b.userId }).lean();
+    expect(d?.pushToken).toBeUndefined();
+  });
+});

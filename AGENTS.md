@@ -20,3 +20,5 @@ A projekt céljáról, felépítéséről, konfigurációjáról, korlátairól 
 
 ## 0.5.0
 `type: "audio"` (hangüzenet, médiával), `Device.notificationDetail` (`name`|`hidden`: a push címe „Sotto”, ha rejtett).
+
+- 0.5.0: `PUT /api/devices/push` részleges: `pushToken` kihagyható (nem törli a tokent), `null` törli.

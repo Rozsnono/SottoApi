@@ -133,7 +133,8 @@ export const BlockBodySchema = z.object({ userId: ObjectIdStr });
 export const ConversationPrefBodySchema = z.object({ mutedUntil: z.string().datetime().nullable() });
 export const ContactPrefBodySchema = z.object({ valueEncrypted: b64(), nonce: b64(24) });
 export const PushTokenBodySchema = z.object({
-  pushToken: z.string().regex(/^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]+\]$/).nullable(),
+  /** `null`: token törlése; kihagyva: a token érintetlen marad (pl. csak az értesítés-részletesség változik). */
+  pushToken: z.string().regex(/^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]+\]$/).nullable().optional(),
   notificationsEnabled: z.boolean().optional(),
   /** `hidden`: a push nem tartalmazza a feladó nevét (csak „Sotto” + általános szöveg). */
   notificationDetail: z.enum(["name", "hidden"]).optional(),
