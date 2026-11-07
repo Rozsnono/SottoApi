@@ -29,10 +29,10 @@ describe("fiókbeállítások", () => {
   it("GET az alapértékeket adja, PUT részlegesen módosít és auditál, üres törzs elutasítva", async () => {
     const a = await makeUser("anna");
     const g = await json(await getSettings(jsonReq("/api/account/settings", "GET", undefined, authH(a)), anyCtx()));
-    expect(g.body.data).toEqual({ username: "anna", discoverability: "everyone", friendRequestPolicy: "everyone" });
+    expect(g.body.data).toEqual({ username: "anna", discoverability: "everyone", friendRequestPolicy: "everyone", showActivity: true });
     const p = await json(await putS(a, { discoverability: "hidden" }));
     expect(p.status).toBe(200);
-    expect(p.body.data).toEqual({ username: "anna", discoverability: "hidden", friendRequestPolicy: "everyone" });
+    expect(p.body.data).toEqual({ username: "anna", discoverability: "hidden", friendRequestPolicy: "everyone", showActivity: true });
     await putS(a, { friendRequestPolicy: "friends_only" });
     const u = await User.findById(a.userId).lean();
     expect([u!.discoverability, u!.friendRequestPolicy]).toEqual(["hidden", "friends_only"]);
@@ -146,5 +146,22 @@ describe("verzió végpont", () => {
     const r = await json(await versionRoute(jsonReq("/api/version", "GET"), anyCtx()));
     expect(r.status).toBe(200);
     expect(r.body.data.version).toBe(pkg.version);
+  });
+});
+
+describe("aktivitás (presence)", () => {
+  it("csak ismerősöké, kölcsönös, és a kikapcsolt felhasználó nem látszik", async () => {
+    const { GET: getPresence } = await import("@/app/api/presence/route");
+    const a = await makeUser("anna");
+    const b = await makeUser("bela");
+    const c = await makeUser("cili");
+    await befriend(a, b);
+    await User.updateMany({}, { lastSeenAt: new Date() });
+    const get = async (u: TestUser) => (await json(await getPresence(jsonReq("/api/presence", "GET", undefined, authH(u)), anyCtx()))).body.data.items.map((i: { userId: string }) => i.userId);
+    expect(await get(a)).toEqual([b.userId]);
+    expect(await get(c)).toEqual([]);
+    await putS(b, { showActivity: false });
+    expect(await get(a)).toEqual([]);
+    expect(await get(b)).toEqual([]);
   });
 });

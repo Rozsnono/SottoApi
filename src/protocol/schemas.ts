@@ -147,8 +147,8 @@ export const ReportBodySchema = z.object({
 
 /** Fiókbeállítások (kereshetőség, ismerősnek jelölés). */
 export const AccountSettingsBodySchema = z
-  .object({ discoverability: DiscoverabilitySchema.optional(), friendRequestPolicy: FriendRequestPolicySchema.optional() })
-  .refine((v) => v.discoverability !== undefined || v.friendRequestPolicy !== undefined, "Legalább egy beállítás szükséges");
+  .object({ discoverability: DiscoverabilitySchema.optional(), friendRequestPolicy: FriendRequestPolicySchema.optional(), showActivity: z.boolean().optional() })
+  .refine((v) => v.discoverability !== undefined || v.friendRequestPolicy !== undefined || v.showActivity !== undefined, "Legalább egy beállítás szükséges");
 
 /** Jelszócsere (a jelenlegi jelszóval megerősítve). */
 export const ChangePasswordBodySchema = z.object({ currentPassword: PasswordSchema, newPassword: PasswordSchema });

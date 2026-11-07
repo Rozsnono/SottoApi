@@ -14,3 +14,6 @@ A projekt céljáról, felépítéséről, konfigurációjáról, korlátairól 
 
 ## Indítási napló
 `src/instrumentation.ts` induláskor kiírja: `[sotto-api] v<verzió> | port <port> | <mód>` (a verzió a package.json-ból, a port a `PORT` környezeti változóból, amit a Next állít).
+
+## Aktivitás (0.4.0)
+`GET /api/presence`: elfogadott ismerősök `lastSeenAt` értéke; kölcsönös (`User.showActivity`, alapból true, `PUT /api/account/settings`). A `lastSeenAt`-ot a `/api/messages/sync` frissíti (20 mp).

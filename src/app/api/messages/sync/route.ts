@@ -54,9 +54,9 @@ export const GET = handle(async (req) => {
   });
 
   const setting = await AppSetting.findOne({ key: "media" }, { version: 1 }).lean();
-  // Aktivitás (legfeljebb percenként frissítjük).
+  // Aktivitás („fent van” jelzéshez): legfeljebb 20 mp-enként frissítjük.
   const now = Date.now();
-  if (!user.lastSeenAt || now - user.lastSeenAt.getTime() > 60_000) {
+  if (!user.lastSeenAt || now - user.lastSeenAt.getTime() > 20_000) {
     await Promise.all([User.updateOne({ _id: user._id }, { lastSeenAt: new Date(now) }), Device.updateOne({ userId: user._id, deviceId }, { lastSeenAt: new Date(now) })]);
   }
   return ok({ messages, deletions: dels, receipts: recs, cursor: String(newCursor), hasMore, mediaKeyVersion: setting?.version ?? 0 });

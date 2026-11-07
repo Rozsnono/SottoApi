@@ -16,6 +16,8 @@ const UserSchema = new Schema(
     kdfParams: { type: new Schema({ kdf: { type: String, required: true } }, { _id: false }), required: true },
     /** Az HKDF-ből levezetett recovery-verifier hash-e (a nyers kód/verifier sosem tárolt). */
     recoveryVerifierHash: { type: String, required: true },
+    /** Aktivitás-megosztás: ha kikapcsolt, a felhasználó nem látszik fent lévőnek, és ő sem lát másokét. */
+    showActivity: { type: Boolean, default: true },
     discoverability: { type: String, enum: ["everyone", "friends_only", "hidden"], default: "everyone" },
     friendRequestPolicy: { type: String, enum: ["everyone", "friends_only"], default: "everyone" },
     status: { type: String, enum: ["active", "suspended", "deleted_pending", "purged"], default: "active", index: true },
