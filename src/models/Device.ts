@@ -8,6 +8,8 @@ const DeviceSchema = new Schema(
     deviceName: { type: String, required: true },
     devicePublicKey: { type: String, required: true },
     pushToken: { type: String },
+    /** `expo`: Expo push token; `fcm`: natív Firebase eszköztoken (közvetlen FCM küldés). */
+    pushProvider: { type: String, enum: ["expo", "fcm"], default: "expo" },
     notificationsEnabled: { type: Boolean, default: true },
     notificationDetail: { type: String, enum: ["name", "hidden"], default: "name" },
     lastSeenAt: { type: Date },

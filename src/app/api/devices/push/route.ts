@@ -11,7 +11,7 @@ export const PUT = handle(async (req) => {
   await connectDb();
   if (body.pushToken) await Device.updateMany({ pushToken: body.pushToken, deviceId: { $ne: deviceId } }, { $unset: { pushToken: 1 } });
   const $set: Record<string, unknown> = {};
-  if (body.pushToken) $set.pushToken = body.pushToken;
+  if (body.pushToken) { $set.pushToken = body.pushToken; $set.pushProvider = body.pushProvider ?? "expo"; }
   if (body.notificationsEnabled !== undefined) $set.notificationsEnabled = body.notificationsEnabled;
   if (body.notificationDetail !== undefined) $set.notificationDetail = body.notificationDetail;
   await Device.updateOne({ userId: user._id, deviceId }, { ...(Object.keys($set).length ? { $set } : {}), ...(body.pushToken === null ? { $unset: { pushToken: 1 } } : {}) });

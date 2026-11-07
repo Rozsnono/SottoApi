@@ -13,6 +13,8 @@ import { PUT as pushRoute } from "@/app/api/devices/push/route";
 import { PUT as muteRoute } from "@/app/api/conversations/[id]/prefs/route";
 import { setMediaAdapterOverride } from "@/lib/media/settings";
 import { notifyNewMessage, setPushFetch } from "@/lib/push";
+import { setFcmFetch } from "@/lib/fcm";
+import { generateKeyPairSync } from "node:crypto";
 import { Device, Message, MessageReceipt, Report } from "@/models";
 import type { MediaStorageAdapter } from "@/lib/media/adapter";
 import { ed25519 } from "@noble/curves/ed25519.js";
@@ -332,5 +334,39 @@ describe("push beállítás részleges módosítása", () => {
     await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: null }, authH(b)), anyCtx());
     d = await Device.findOne({ userId: b.userId }).lean();
     expect(d?.pushToken).toBeUndefined();
+  });
+});
+
+describe("FCM (natív Firebase token)", () => {
+  it("fcm tokenes eszköznek közvetlenül küld (OAuth JWT + v1 küldés), a név elrejthető; UNREGISTERED törli a tokent", async () => {
+    const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    const acc = { client_email: "svc@proj.iam.gserviceaccount.com", private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(), project_id: "proj" };
+    process.env.FCM_SERVICE_ACCOUNT_B64 = Buffer.from(JSON.stringify(acc)).toString("base64");
+    const calls: { url: string; body: string }[] = [];
+    let result: "ok" | "gone" = "ok";
+    setFcmFetch((async (u: string, init?: { body?: unknown }) => {
+      calls.push({ url: String(u), body: String(init?.body) });
+      if (String(u).includes("oauth2")) return new Response(JSON.stringify({ access_token: "tok", expires_in: 3600 }), { status: 200 });
+      return result === "ok" ? new Response("{}", { status: 200 }) : new Response(JSON.stringify({ error: { status: "NOT_FOUND", details: [{ errorCode: "UNREGISTERED" }] } }), { status: 404 });
+    }) as unknown as typeof fetch);
+    try {
+      const { b, conv } = await pair();
+      const fcmToken = "f".repeat(40) + ":APA91bExample";
+      expect((await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: fcmToken, pushProvider: "fcm", notificationDetail: "hidden" }, authH(b)), anyCtx())).status).toBe(200);
+      expect((await notifyNewMessage({ recipientId: b.userId, senderUsername: "anna", conversationId: conv })).sent).toBe(1);
+      const send = calls.find((c) => c.url.includes("fcm.googleapis.com/v1/projects/proj/messages:send"))!;
+      const msg = JSON.parse(send.body).message;
+      expect(msg.token).toBe(fcmToken);
+      expect(msg.notification).toEqual({ title: "Sotto", body: "New message" });
+      expect(msg.data.conversationId).toBe(conv);
+      result = "gone";
+      expect((await notifyNewMessage({ recipientId: b.userId, senderUsername: "anna", conversationId: conv })).sent).toBe(0);
+      expect((await Device.findOne({ userId: b.userId }).lean())?.pushToken).toBeUndefined();
+      // érvénytelen FCM token alakja elutasítva
+      expect((await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: "rövid token!", pushProvider: "fcm" }, authH(b)), anyCtx())).status).toBe(400);
+    } finally {
+      delete process.env.FCM_SERVICE_ACCOUNT_B64;
+      setFcmFetch(null);
+    }
   });
 });

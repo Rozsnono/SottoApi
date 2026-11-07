@@ -43,3 +43,7 @@ next-env.d.ts
 # Sotto
 /.data/
 !.env.example
+
+# Firebase szolgáltatásfiók (titok)
+*firebase-adminsdk*.json
+fcm-service-account*.json

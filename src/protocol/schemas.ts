@@ -132,12 +132,18 @@ export const FriendRequestBodySchema = z.object({ username: UsernameSchema });
 export const BlockBodySchema = z.object({ userId: ObjectIdStr });
 export const ConversationPrefBodySchema = z.object({ mutedUntil: z.string().datetime().nullable() });
 export const ContactPrefBodySchema = z.object({ valueEncrypted: b64(), nonce: b64(24) });
+const EXPO_TOKEN_RE = /^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]+\]$/;
 export const PushTokenBodySchema = z.object({
   /** `null`: token törlése; kihagyva: a token érintetlen marad (pl. csak az értesítés-részletesség változik). */
-  pushToken: z.string().regex(/^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]+\]$/).nullable().optional(),
+  pushToken: z.string().min(10).max(4096).nullable().optional(),
+  /** A token fajtája: `expo` (alap) vagy `fcm` (natív Firebase token). */
+  pushProvider: z.enum(["expo", "fcm"]).optional(),
   notificationsEnabled: z.boolean().optional(),
   /** `hidden`: a push nem tartalmazza a feladó nevét (csak „Sotto” + általános szöveg). */
   notificationDetail: z.enum(["name", "hidden"]).optional(),
+}).superRefine((b, ctx) => {
+  if (b.pushToken && b.pushProvider !== "fcm" && !EXPO_TOKEN_RE.test(b.pushToken)) ctx.addIssue({ code: "custom", path: ["pushToken"], message: "Érvénytelen Expo push token." });
+  if (b.pushToken && b.pushProvider === "fcm" && !/^[A-Za-z0-9_:.-]{20,4096}$/.test(b.pushToken)) ctx.addIssue({ code: "custom", path: ["pushToken"], message: "Érvénytelen FCM token." });
 });
 
 export const ReportBodySchema = z.object({

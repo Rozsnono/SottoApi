@@ -31,6 +31,8 @@ const EnvSchema = z.object({
   MODERATION_PUBLIC_KEY: z.string().optional(),
   /** Cron végpontok védelme. */
   CRON_SECRET: z.string().min(16).optional(),
+  /** Firebase szolgáltatásfiók JSON base64-ben (FCM push, Expo-fiók nélkül). Titok! Opcionális: nélküle csak az Expo-tokenes push működik. */
+  FCM_SERVICE_ACCOUNT_B64: z.string().optional(),
   /** Csak fejlesztéshez: helyi lemezes média adapter gyökere. */
   LOCAL_MEDIA_DIR: z.string().default(".data/media"),
 });

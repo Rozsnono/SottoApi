@@ -22,3 +22,5 @@ A projekt céljáról, felépítéséről, konfigurációjáról, korlátairól 
 `type: "audio"` (hangüzenet, médiával), `Device.notificationDetail` (`name`|`hidden`: a push címe „Sotto”, ha rejtett).
 
 - 0.5.0: `PUT /api/devices/push` részleges: `pushToken` kihagyható (nem törli a tokent), `null` törli.
+
+- 0.6.0: FCM v1 közvetlen küldés (`lib/fcm.ts`), `Device.pushProvider` (`expo`|`fcm`), `PushTokenBodySchema.pushProvider`. Env: `FCM_SERVICE_ACCOUNT_B64` (titok; `base64 -i fcm-service-account.json | tr -d "\n"`).
