@@ -24,3 +24,4 @@ A projekt céljáról, felépítéséről, konfigurációjáról, korlátairól 
 - 0.5.0: `PUT /api/devices/push` részleges: `pushToken` kihagyható (nem törli a tokent), `null` törli.
 
 - 0.6.0: FCM v1 közvetlen küldés (`lib/fcm.ts`), `Device.pushProvider` (`expo`|`fcm`), `PushTokenBodySchema.pushProvider`. Env: `FCM_SERVICE_ACCOUNT_B64` (titok; `base64 -i fcm-service-account.json | tr -d "\n"`).
+- 0.7.0: `POST /api/devices/push/test` (teszt-értesítés a hívó eszközre; 404 nincs token, 503 nincs FCM-beállítás/küldési hiba).

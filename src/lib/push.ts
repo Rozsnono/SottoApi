@@ -67,3 +67,16 @@ export async function notifyNewMessage(a: NotifyArgs): Promise<{ sent: number }>
     return { sent: 0 };
   }
 }
+
+/** Teszt-értesítés egyetlen Expo tokenre (a `POST /api/devices/push/test` használja). */
+export async function sendExpoTest(token: string): Promise<boolean> {
+  try {
+    const res = await fetchImpl(EXPO_URL, { method: "POST", headers: { "content-type": "application/json", accept: "application/json" }, body: JSON.stringify([{ to: token, title: "Sotto", body: "Test", sound: "default", channelId: "messages", data: { type: "test" } }]) });
+    if (!res.ok) return false;
+    const json = (await res.json()) as { data?: { status: string }[] };
+    return json.data?.[0]?.status === "ok";
+  } catch (e) {
+    logger.error("Expo teszt push sikertelen", e);
+    return false;
+  }
+}

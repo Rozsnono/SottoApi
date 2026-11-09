@@ -14,6 +14,7 @@ import { PUT as muteRoute } from "@/app/api/conversations/[id]/prefs/route";
 import { setMediaAdapterOverride } from "@/lib/media/settings";
 import { notifyNewMessage, setPushFetch } from "@/lib/push";
 import { setFcmFetch } from "@/lib/fcm";
+import { POST as pushTest } from "@/app/api/devices/push/test/route";
 import { generateKeyPairSync } from "node:crypto";
 import { Device, Message, MessageReceipt, Report } from "@/models";
 import type { MediaStorageAdapter } from "@/lib/media/adapter";
@@ -364,6 +365,27 @@ describe("FCM (natív Firebase token)", () => {
       expect((await Device.findOne({ userId: b.userId }).lean())?.pushToken).toBeUndefined();
       // érvénytelen FCM token alakja elutasítva
       expect((await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: "rövid token!", pushProvider: "fcm" }, authH(b)), anyCtx())).status).toBe(400);
+    } finally {
+      delete process.env.FCM_SERVICE_ACCOUNT_B64;
+      setFcmFetch(null);
+    }
+  });
+});
+
+describe("teszt-értesítés (hibakeresés)", () => {
+  it("token nélkül 404, FCM-beállítás nélkül 503, beállítva 200", async () => {
+    const { b } = await pair();
+    const call = async () => json(await pushTest(jsonReq("/api/devices/push/test", "POST", {}, authH(b)), anyCtx()));
+    expect((await call()).status).toBe(404);
+    await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: "f".repeat(40) + ":APA91bTest", pushProvider: "fcm" }, authH(b)), anyCtx());
+    delete process.env.FCM_SERVICE_ACCOUNT_B64;
+    expect((await call()).status).toBe(503);
+    const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    process.env.FCM_SERVICE_ACCOUNT_B64 = Buffer.from(JSON.stringify({ client_email: "s@p.iam.gserviceaccount.com", private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(), project_id: "proj" })).toString("base64");
+    setFcmFetch((async (u: string) => (String(u).includes("oauth2") ? new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }), { status: 200 }) : new Response("{}", { status: 200 }))) as unknown as typeof fetch);
+    try {
+      const r = await call();
+      expect([r.status, r.body.data.delivered, r.body.data.provider]).toEqual([200, true, "fcm"]);
     } finally {
       delete process.env.FCM_SERVICE_ACCOUNT_B64;
       setFcmFetch(null);
