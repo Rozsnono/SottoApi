@@ -27,8 +27,13 @@ function account(): Account | null {
   if (parsed?.raw === raw) return parsed.acc;
   let acc: Account | null = null;
   try {
-    const j = JSON.parse(Buffer.from(raw, "base64").toString("utf8")) as Partial<Account>;
-    if (j.client_email && j.private_key && j.project_id) acc = { client_email: j.client_email, private_key: j.private_key, project_id: j.project_id, token_uri: j.token_uri };
+    // Megengedő olvasás: idézőjelek/szóközök/sortörések (.env, panel-beillesztés), base64 vagy base64url, vagy közvetlenül JSON.
+    const v = raw.trim().replace(/^['"]|['"]$/g, "");
+    const text = v.startsWith("{") ? v : Buffer.from(v.replace(/\s+/g, ""), "base64").toString("utf8");
+    const j = JSON.parse(text) as Partial<Account>;
+    // Ha a privát kulcs sortörései szó szerinti „\n”-ként érkeztek, visszaalakítjuk.
+    const key = j.private_key && !j.private_key.includes("\n") ? j.private_key.replace(/\\n/g, "\n") : j.private_key;
+    if (j.client_email && key && j.project_id) acc = { client_email: j.client_email, private_key: key, project_id: j.project_id, token_uri: j.token_uri };
     else logger.error("FCM szolgáltatásfiók hiányos (client_email/private_key/project_id)");
   } catch {
     logger.error("FCM_SERVICE_ACCOUNT_B64 nem érvényes base64 JSON");
@@ -39,6 +44,12 @@ function account(): Account | null {
 
 /** Be van-e állítva az FCM (különben az FCM-tokenes eszközöknek nem küldünk, és ezt naplózzuk). */
 export const fcmEnabled = (): boolean => account() !== null;
+
+/** Az FCM-beállítás állapota a hibakereséshez: `missing` (nincs env), `invalid` (nem értelmezhető), `ok`. */
+export function fcmStatus(): "missing" | "invalid" | "ok" {
+  if (!process.env.FCM_SERVICE_ACCOUNT_B64) return "missing";
+  return account() ? "ok" : "invalid";
+}
 
 const b64url = (b: Buffer | string) => Buffer.from(b).toString("base64url");
 let tokenCache: { token: string; exp: number } | null = null;

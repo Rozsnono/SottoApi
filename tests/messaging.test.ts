@@ -380,8 +380,11 @@ describe("teszt-értesítés (hibakeresés)", () => {
     await pushRoute(jsonReq("/api/devices/push", "PUT", { pushToken: "f".repeat(40) + ":APA91bTest", pushProvider: "fcm" }, authH(b)), anyCtx());
     delete process.env.FCM_SERVICE_ACCOUNT_B64;
     expect((await call()).status).toBe(503);
+    process.env.FCM_SERVICE_ACCOUNT_B64 = "nem-json";
+    const bad = await call();
+    expect([bad.status, String(bad.body.error?.message).includes("nem értelmezhető")]).toEqual([503, true]);
     const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-    process.env.FCM_SERVICE_ACCOUNT_B64 = Buffer.from(JSON.stringify({ client_email: "s@p.iam.gserviceaccount.com", private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(), project_id: "proj" })).toString("base64");
+    process.env.FCM_SERVICE_ACCOUNT_B64 = `"${Buffer.from(JSON.stringify({ client_email: "s@p.iam.gserviceaccount.com", private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(), project_id: "proj" })).toString("base64")}"\n`; // idézőjelek + sortörés: megengedő olvasás
     setFcmFetch((async (u: string) => (String(u).includes("oauth2") ? new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }), { status: 200 }) : new Response("{}", { status: 200 }))) as unknown as typeof fetch);
     try {
       const r = await call();

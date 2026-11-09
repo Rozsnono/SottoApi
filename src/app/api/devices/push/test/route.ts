@@ -2,7 +2,7 @@ import { connectDb } from "@/lib/db";
 import { ApiError, handle, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/sessions";
 import { Device } from "@/models";
-import { fcmEnabled, sendFcm } from "@/lib/fcm";
+import { fcmStatus, sendFcm } from "@/lib/fcm";
 import { sendExpoTest } from "@/lib/push";
 
 /**
@@ -16,7 +16,9 @@ export const POST = handle(async (req) => {
   if (!d?.pushToken) throw new ApiError("NOT_FOUND", "Ehhez az eszközhöz nincs regisztrált push token.");
   const provider = d.pushProvider === "fcm" ? "fcm" : "expo";
   if (provider === "fcm") {
-    if (!fcmEnabled()) throw new ApiError("SERVICE_UNAVAILABLE", "A push nincs beállítva a szerveren (FCM_SERVICE_ACCOUNT_B64).");
+    const st = fcmStatus();
+    if (st === "missing") throw new ApiError("SERVICE_UNAVAILABLE", "A szerveren hiányzik az FCM_SERVICE_ACCOUNT_B64 környezeti változó (vagy az alkalmazás nem indult újra utána).");
+    if (st === "invalid") throw new ApiError("SERVICE_UNAVAILABLE", "Az FCM_SERVICE_ACCOUNT_B64 értéke nem értelmezhető (base64 JSON kell client_email, private_key, project_id mezőkkel).");
     const r = await sendFcm(d.pushToken, { title: "Sotto", body: "Test", data: { type: "test" } });
     if (r === "unregistered") {
       await Device.updateOne({ _id: d._id }, { $unset: { pushToken: 1 } });
