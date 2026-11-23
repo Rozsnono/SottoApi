@@ -15,6 +15,9 @@ import { setMediaAdapterOverride } from "@/lib/media/settings";
 import { notifyNewMessage, setPushFetch } from "@/lib/push";
 import { setFcmFetch } from "@/lib/fcm";
 import { POST as pushTest } from "@/app/api/devices/push/test/route";
+import { GET as historyRoute } from "@/app/api/messages/history/route";
+import { GET as syncRouteRaw } from "@/app/api/messages/sync/route";
+import { nextSeq } from "@/lib/seq";
 import { generateKeyPairSync } from "node:crypto";
 import { Device, Message, MessageReceipt, Report } from "@/models";
 import type { MediaStorageAdapter } from "@/lib/media/adapter";
@@ -393,5 +396,62 @@ describe("teszt-értesítés (hibakeresés)", () => {
       delete process.env.FCM_SERVICE_ACCOUNT_B64;
       setFcmFetch(null);
     }
+  });
+});
+
+describe("lapozott előzmény (0.8.0)", () => {
+  async function seed(n: number) {
+    const { a, b, conv } = await pair();
+    const first = (await send(a, await buildMessage(a, conv))).body.data.id as string;
+    const base = (await Message.findById(first).lean())!;
+    const ids = [first];
+    for (let i = 1; i < n; i++) {
+      const { _id, createdAt, ...rest } = base as typeof base & { createdAt: Date };
+      void _id; void createdAt;
+      const d = await Message.create({ ...rest, seq: await nextSeq(), clientMessageId: randomUUID() });
+      ids.push(String(d._id));
+    }
+    return { a, b, conv, ids };
+  }
+  const recentSync = async (u: Awaited<ReturnType<typeof makeUser>>) => json(await syncRouteRaw(jsonReq("/api/messages/sync?cursor=0&recent=1", "GET", undefined, authH(u)), anyCtx()));
+  const history = async (u: Awaited<ReturnType<typeof makeUser>>, conv: string, before: number, limit?: number) =>
+    json(await historyRoute(jsonReq(`/api/messages/history?conversationId=${conv}&before=${before}${limit ? `&limit=${limit}` : ""}`, "GET", undefined, authH(u)), anyCtx()));
+
+  it("a kezdeti szinkron csak a legutóbbi 40 üzenetet adja, a kurzor a fejre áll, az előzmény lapozható", async () => {
+    const { b, conv, ids } = await seed(95);
+    const r = await recentSync(b);
+    expect(r.body.data.messages).toHaveLength(40);
+    expect(r.body.data.older[conv]).toBe(true);
+    expect(r.body.data.hasMore).toBe(false);
+    const seqs: number[] = r.body.data.messages.map((m: { seq: number }) => m.seq);
+    expect(seqs).toEqual([...seqs].sort((x, y) => x - y));
+    expect(r.body.data.messages[39].id).toBe(ids[94]);
+    // A kurzortól már nincs „újabb” – a teljes előzményt nem tölti le újra.
+    expect((await sync(b, r.body.data.cursor)).body.data.messages).toHaveLength(0);
+
+    const h1 = await history(b, conv, seqs[0]);
+    expect(h1.body.data.messages).toHaveLength(40);
+    expect(h1.body.data.hasMore).toBe(true);
+    const h2 = await history(b, conv, h1.body.data.messages[0].seq);
+    expect(h2.body.data.messages).toHaveLength(15);
+    expect(h2.body.data.hasMore).toBe(false);
+    const all = new Set([...r.body.data.messages, ...h1.body.data.messages, ...h2.body.data.messages].map((m: { id: string }) => m.id));
+    expect(all.size).toBe(95);
+  });
+
+  it("az előzmény csak a résztvevőnek érhető el; hibás paraméter elutasítva; régi kliens (recent nélkül) a teljeset kapja", async () => {
+    const { a, b, conv } = await seed(3);
+    const c = await makeUser("cili");
+    expect((await history(c, conv, 999)).status).toBe(404);
+    expect((await history(a, conv, 0)).status).toBe(400);
+    expect((await sync(b, "0")).body.data.messages).toHaveLength(3);
+  });
+
+  it("az előzmény oldal a saját üzenetek olvasás-visszaigazolását is hozza", async () => {
+    const { a, b, conv, ids } = await seed(2);
+    expect((await read(b, ids[0])).status).toBe(200);
+    const seq = (await Message.findById(ids[1]).lean())!.seq;
+    const h = await history(a, conv, seq + 1);
+    expect(h.body.data.receipts.map((r: { messageId: string }) => r.messageId)).toContain(ids[0]);
   });
 });

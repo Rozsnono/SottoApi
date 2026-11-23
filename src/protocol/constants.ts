@@ -50,6 +50,10 @@ export const MAX_TEXT_CIPHERTEXT_CHARS = 100_000;
 export const MAX_WRAPPED_KEYS = 64;
 export const MESSAGE_RATE = { perMinute: 10, burst: 5, burstWindowSec: 5 } as const;
 export const SYNC_PAGE_SIZE = 100;
+/** Lapozott előzmény: ennyi (nem-esemény) üzenet jön beszélgetésenként a kezdeti szinkronban és az `/api/messages/history` oldalain. */
+export const RECENT_PAGE_SIZE = 40;
+/** A kezdeti szinkron/előzmény oldal mellé küldött rendszer-események (téma, TTL, szerkesztés, reakció) felső korlátja beszélgetésenként. */
+export const MAX_EVENTS_PER_PAGE = 500;
 export const REPORT_REASONS = ["harassment", "spam", "illegal", "other"] as const;
 /** A `wrappedKeys` deviceId-ja az identitáskulcsra csomagolt példányhoz: `identity:<userId>`. */
 export const identityRecipientId = (userId: string) => `identity:${userId}`;

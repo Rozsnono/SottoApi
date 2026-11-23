@@ -32,6 +32,8 @@ const MessageSchema = new Schema(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 MessageSchema.index({ conversationId: 1, createdAt: -1 });
+/** Lapozott előzmény: beszélgetésenként seq szerinti csökkenő olvasás. */
+MessageSchema.index({ conversationId: 1, seq: -1 });
 MessageSchema.index({ senderId: 1, clientMessageId: 1 }, { unique: true });
 
 const MessageReceiptSchema = new Schema({
